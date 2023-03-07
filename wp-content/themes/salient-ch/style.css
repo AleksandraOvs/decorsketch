@@ -1,0 +1,519 @@
+/*
+Theme Name:  Salient-ch
+Template: salient
+*/
+@font-face {
+  font-weight: 400;
+  font-style: normal;
+  font-family: 'Bodoni';
+  font-display: swap;
+  src: 
+      local('Bodoni'),
+      url('fonts/bodoni-regular.woff2') format('woff2'),
+      url('fonts/bodoni-regular.woff') format('woff');
+}
+@font-face {
+  font-weight: 700;
+  font-style: normal;
+  font-family: 'Bodoni';
+  font-display: swap;
+  src: 
+      local('Bodoni'),
+      url('fonts/bodoni-bold.woff2') format('woff2'),
+      url('fonts/bodoni-bold.woff') format('woff');
+}
+@font-face {
+  font-weight: 400;
+  font-style: italic;
+  font-family: 'Bodoni';
+  font-display: swap;
+  src: 
+      local('Bodoni'),
+      url('fonts/bodoni-italic.woff2') format('woff2'),
+      url('fonts/bodoni-italic.woff') format('woff');
+}
+@font-face {
+  font-weight: 700;
+  font-style: normal;
+  font-family: 'Mont';
+  font-display: swap;
+  src: 
+      local('Mont'),
+      url('fonts/mont-bold.woff2') format('woff2'),
+      url('fonts/mont-bold.woff') format('woff');
+}
+
+@font-face {
+  font-weight: 400;
+  font-style: normal;
+  font-family: 'Mont';
+  font-display: swap;
+  src: 
+      local('Mont'),
+      url('fonts/mont-regular.woff2') format('woff2'),
+      url('fonts/mont-regular.woff') format('woff');
+}
+
+@font-face {
+  font-weight: 300;
+  font-style: normal;
+  font-family: 'Mont';
+  font-display: swap;
+  src: 
+      local('Mont'),
+      url('fonts/mont-light.woff2') format('woff2'),
+      url('fonts/mont-light.woff') format('woff');
+}
+
+body{
+  font-family: 'Mont';
+  font-weight: 400;
+  font-size: 1.2em;
+  color: #000;
+}
+.bold, strong, b {
+  font-family: 'Mont';
+  font-weight: 700;
+}
+h1{
+  font-size:5em;
+}
+
+h1, h2,h3, h4, h5, h6 {
+  color: #2c2c2c;
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Bodoni';
+  font-weight: 400;
+}
+h2{
+  font-size:1.6em;
+  text-transform: uppercase;
+  margin: 2% auto;
+}
+h3{
+  font-size:1.2em;
+  font-family:'Mont';
+}
+.h3-heading-docs{
+  font-family: 'Bodoni';
+  font-weight: 400;
+}
+.h2-heading-docs:after{
+  content:'';
+  margin:0;
+  display:block;
+  width:100%;
+  height:1px;
+  background: #8FC8F0;
+}
+.h3-heading-docs:after{
+  content:'';
+  margin:0;
+  display:block;
+  font-size: 1.5em;
+  width:20%;
+  height:1px;
+  background: #8FC8F0;
+}
+h6{
+  font-style: italic;
+}
+#top nav ul li a{
+  font-family: 'Mont';
+  font-weight:400;
+  text-transform: uppercase;
+  color: #2c2c2c;
+}
+.about-card-text{
+font-size: 1.5em;
+line-height: 1.2;
+}
+.about-card{
+position:relative;
+background: rgba(143,200,240,0.69);
+padding: 10% 2%;
+margin-top:10%;
+}
+.about-card1, .about-card2{
+position:relative;
+}
+.about-card1:before, .about-card2:before, .about-card3:before, .about-card4:before {
+position:absolute;
+z-index:100;
+font-size:5em;
+font-family: 'Bodoni';
+color: #2c2c2c;
+text-shadow: 1px 1px 2px rgba(44,44,44,.4);
+left:0;
+}
+.about-card1:before{
+content:'1.';
+}
+.about-card2:before{
+content:'2.';
+}
+.about-card3:before{
+content:'3.';
+}
+.about-card4:before{
+content:'4.';
+}
+
+.program-block-list{
+text-align:center;
+}
+.program-block-list-item{
+  list-style: none;
+  line-height:1.5;
+  margin-bottom:20px;
+  display:block;
+/* 		padding: 2%;
+  text-align:center;
+  background:#FDFCFB; */
+}
+.program-block-list-item{
+/* display:flex;
+align-items:center; */
+text-align:center;
+}
+.whom-block .wpb_wrapper h3:before,
+.program-block-list-item:before,
+.block-list .vc_column-inner .wpb_wrapper ul li:before{
+content:'';
+display:block;
+margin:0 auto;
+width:20px;
+height:24px;
+background:url(https://decorsketch.design/wp-content/uploads/2022/04/marker-blue.svg) no-repeat;
+background-size:contain;
+}
+.block-list .vc_column-inner .wpb_wrapper ul li{
+  display: flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+}
+.program-block1, .program-block2, .program-block3, .program-block4{
+position:relative;
+}
+.program-block1:before{
+content:'Блок 1.';
+}
+.program-block2:before{
+content:'Блок 2.';
+}
+.program-block3:before{
+content:'Блок 3.';
+}
+.program-block4:before{
+content:'Блок 4.';
+}
+.program-block1:before, .program-block2:before, .program-block3:before, .program-block4:before{
+position:absolute;
+z-index:100;
+font-family: 'Bodoni';
+font-size: 5em;
+color: #8FC8F0;
+text-shadow: 1px 1px 2px #B4B4B4;
+left:5%;
+}
+
+.button-link, .button-link-order, .popmake-1064{
+display:block;
+padding: 15px 20px;
+width: 40%;
+margin: 30px auto;
+text-align: center;
+border-radius:7px;
+transition: all .3s ease-in-out;
+}
+.button-link{
+  color: #2c2c2c;
+background-color: rgba(143,200,240, 1);
+}
+.button-link:hover{
+background-color: rgba(44,44,44,.9);
+}
+.button-link-order{
+  width:40%;
+  margin:0 auto;
+  display:block;
+  background-color: rgba(44,44,44,.9);
+  color:#fff;
+}
+.button-link-order:hover{
+  background-color: rgba(143, 200,240, 1);
+}
+.what-card {
+  background-color: rgba(143, 200,240, .7);
+  padding: 5% 2%;
+}
+.what-card-text{
+  text-align:center;
+}
+.bonus .vc_column-inner{
+  /* box-shadow: 2px 0px 7px rgb(44 44 44 / 20%); */
+  box-shadow: 2px 2px 20px rgb(44 44 44 / 40%);
+  border: 20px solid rgba(143, 200,240, .7);
+  /* border-bottom: 2px solid rgba(0,0,0,0.08); */
+}
+.program-block .vc_column-inner .wpb_wrapper .toggles .toggle{
+  border: 15px solid rgba(143,200,240,0.7);
+  padding:2%;
+  margin-top:30px;
+}
+div[data-style="minimal"] .toggle.open h3 i:before, div[data-style="minimal"] .toggle:hover h3 i:before,
+div[data-style="minimal"] .toggle.open h3 i:before, div[data-style="minimal"] .toggle:hover h3 i:after{
+background: #2c2c2c;
+}
+div[data-style="minimal"] .toggle.default.open i, div[data-style="minimal"] .toggle.default:hover i{
+  border-color: #2c2c2c;
+}
+
+/* .program-block div[data-style="minimal"] .toggle.default.open i{
+  background:#2c2c2c;
+} */
+
+.program-block div[data-style="minimal"] .toggle.open h3 a{
+  color:#000;
+  margin-bottom: 30px;
+}
+
+.program-block div[data-style="minimal"] .toggle h3 a{
+  padding: 0;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.pum-theme-653 .pum-content + .pum-close, .pum-theme-ds-popup-theme .pum-content + .pum-close {
+  position: absolute;
+  height: 40px;
+  width: 40px;
+  border-radius: 100%;
+  left: auto;
+  right: -1%;
+  bottom: auto;
+  top: -1%;
+  padding: 8px;
+  color: #ffffff;
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 36px;
+  border: 1px none #ffffff;
+  border-radius: 100%;
+  box-shadow: 1px 1px 3px 0px rgb(255 255 255 / 0%);
+  text-shadow: 0px 0px 0px rgb(0 0 0 / 23%);
+background-image: url("https://decorsketch.design/wp-content/uploads/2022/04/close.svg");
+background-repeat:no-repeat;
+background-position:center;
+background-size:70% !important;
+};
+
+.pum-theme-653 .pum-container, .pum-theme-ds-popup-theme .pum-container {
+  padding-top: 10%;
+  border-radius: 0px;
+  border: 1px solid #8fc8f0;
+  box-shadow: 1px 1px 3px 0px rgb(2 2 2 / 23%);
+  background-color: rgba( 249, 249, 249, 1.00 );
+  background: url(https://decorsketch.design/wp-content/uploads/2022/04/Mesa-de-trabajo-1@2x.png) no-repeat;
+  background-size: cover;
+}
+
+.input-text::placeholder, .input-textarea::placeholder{
+  color:#2c2c2c;
+  background:transparent;
+  border-bottom: 2px solid #2c2c2c;
+}
+
+.input-text{
+  background:transparent;
+  border-bottom: 1px solid #2c2c2c;
+}
+.input-textarea{
+  background:transparent;
+  border:1px solid #2c2c2c;
+}
+
+
+.footer__contacts{
+  display:flex;
+  width: 40%;
+  margin: 0 auto !important;
+  justify-content:space-between;
+}
+
+.footer__contacts-item{
+  list-style:none;
+}
+
+.footer__contacts-item-link{
+  display:block;
+  width:40px;
+  height:40px;
+  transition: all 0.3s ease-in-out;
+}
+
+.footer__contacts li:nth-child(1) a{
+  background-image: url('https://decorsketch.design/wp-content/uploads/2022/04/wa-1.svg');
+  background-size:contain;
+  background-repeat: no-repeat;
+}
+.footer__contacts li:nth-child(1) a:focus{
+  background-image: url('https://decorsketch.design/wp-content/uploads/2022/04/wa-f-1.svg');
+  background-size:contain;
+  background-repeat: no-repeat;
+}
+
+.footer__contacts li:nth-child(2) a{
+  background-image: url('https://decorsketch.design/wp-content/uploads/2022/04/wa.svg');
+  background-size:contain;
+  background-repeat: no-repeat;
+}
+.footer__contacts li:nth-child(2) a:focus{
+  background-image: url('https://decorsketch.design/wp-content/uploads/2022/04/wa-f.svg');
+  background-size:contain;
+  background-repeat: no-repeat;
+}
+.footer__contacts li:nth-child(3) a{
+  background-image: url('https://decorsketch.design/wp-content/uploads/2022/04/vk.svg');
+  background-size:contain;
+  background-repeat: no-repeat;
+}
+.footer__contacts li:nth-child(3) a:focus{
+  background-image: url('https://decorsketch.design/wp-content/uploads/2022/04/vk-f.svg');
+  background-size:contain;
+  background-repeat: no-repeat;
+}
+
+.footer__contacts li:nth-child(4) a{
+  background-image: url('https://decorsketch.design/wp-content/uploads/2022/04/pinterest.svg');
+  background-size:contain;
+  background-repeat: no-repeat;
+}
+.footer__contacts li:nth-child(4) a:focus{
+  background-image: url('https://decorsketch.design/wp-content/uploads/2022/04/pinterest-f.svg');
+  background-size:contain;
+  background-repeat: no-repeat;
+}
+
+.footer__contacts li:nth-child(5) a{
+  background-image: url('https://decorsketch.design/wp-content/uploads/2022/04/be.svg');
+  background-size:contain;
+  background-repeat: no-repeat;
+}
+
+.footer__contacts li:nth-child(5) a:focus{
+  background-image: url('https://decorsketch.design/wp-content/uploads/2022/04/be-f.svg');
+  background-size:contain;
+  background-repeat: no-repeat;
+}
+
+.footer__contacts li a:hover{
+  transform: scale(1.2);
+}
+#footer-outer[data-cols="1"][data-disable-copyright="false"] #copyright {
+  padding-bottom: 10px;
+}
+input[type=text], textarea, input[type=email], input[type=password], input[type=tel], input[type=url], input[type=search], input[type=date], .material.woocommerce-page[data-form-style="default"] input#coupon_code, select {
+  background-color: transparent;
+}
+.footer__docs{
+  display: flex;
+    width: 60%;
+    justify-content: center;
+    margin: 2% auto 0!important;
+}
+.footer__docs-items{
+  margin-right:20px;
+}
+.footer__docs-items-link {
+    text-align: center;
+}
+.footer__docs-items-link{
+  color: #fff;
+  font-size:0.9em;
+  cursor: pointer;
+  text-align:center;
+  text-decoration: underline;
+}
+body #footer-outer[data-cols="1"][data-disable-copyright="false"] .row {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#copyright{
+  padding-bottom:20px;
+}
+
+.wpcf7 form.sent .wpcf7-response-output {
+  border-color: rgba(143,200,240);
+  box-shadow: 3px 3px 20px rgb(44 44 44 / 15%);
+  padding: 5%;
+  background: rgba(143,200,240,.5);
+  font-size: 1.5em;
+}
+
+@media (max-width: 998px){
+  h1{
+    font-size:3em;
+  }
+  h2{
+    text-align:center;
+  }
+  .text-content{
+    text-align:center;
+  }
+  .footer__contacts {
+    width: 100%;
+}
+.button-link-order, .button-link{
+  width:80%;
+}
+.program-block-list{
+  margin: 0 auto;
+}
+.program-block-list li,
+.block-list .vc_column-inner .wpb_wrapper ul li{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align: center;
+  }
+  .program-block-list-item:before,
+  .block-list .vc_column-inner .wpb_wrapper ul li:before{
+ margin:0 auto;
+  }
+  .program-block-list-item:before,
+.block-list .vc_column-inner .wpb_wrapper ul li:before{
+width:15px;
+height:15px;
+}
+.nectar-flickity.nectar-carousel.nectar-carousel:not(.masonry) .flickity-viewport {
+  margin: 0;
+}
+}
+
+@media(max-width:600px){
+.container, .orbit-wrapper .slider-nav, .post-area.standard-minimal.full-width-content .post .inner-wrap {
+    max-width: 400px;
+}
+div[data-style*="minimal"] .toggle h3 i {
+  width: 20px;
+  height: 20px;
+}
+
+div[data-style="minimal"] .toggle h3 i:before {
+  top: 9px;
+  left: 3px;
+  width: 10px;
+}
+div[data-style="minimal"] .toggle h3 i:after {
+  top: 3px;
+  left: 9px;
+  width: 2px;
+  margin-left: -2px;
+  height: 10px;
+}
+}

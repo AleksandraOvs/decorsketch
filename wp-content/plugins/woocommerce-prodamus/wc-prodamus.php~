@@ -1,0 +1,429 @@
+<?php
+/**
+ * Plugin Name: WooCommerce Payment Gateway "Продамус.Платежи"
+ * Plugin URI: https://payform.ru/
+ * Description: Проведение платежей через "Продамус.Платежи"
+ * Version: 0.0.3
+ * Author: Prodamus Ltd
+ * Author URI: https://prodamus.ru/
+ */
+
+/**
+ * Протестировано на:
+ * WordPress 4.7.9 + WooCommerce 2.6.14
+ * WordPress 4.9.4 + WooCommerce 3.3.3
+ */
+
+if ( !defined('ABSPATH') )
+	exit;
+
+/**
+ * Инициализация шлюза оплаты WooCommerce
+ */
+function woocommerce_gateway_prodamus_init() {
+	if (!class_exists('WC_Payment_Gateway'))
+		return;
+	if (class_exists('WC_Gateway_Prodamus'))
+		return;
+
+	class WC_Gateway_Prodamus extends WC_Payment_Gateway {
+		public function __construct() {
+			$this->id = 'prodamus';
+			$this->has_fields = false;
+			$this->method_title = 'Продамус.Платежи';
+			$this->method_description = 'Настройка приема электронных платежей через Продамус.Платежи.';
+			$this->init_form_fields();
+			$this->init_settings();
+
+			$this->title = $this->get_option('title');
+			$this->description = $this->get_option('description');
+			$this->payment_site_name = $this->get_option('payment_site_name');
+			$this->secret_key = $this->get_option('secret_key');
+			$this->order_status = $this->get_option('order_status');
+			$icon = $this->get_option('icon');
+			$this->icon = ($icon && ('no' != $icon) && array_key_exists($icon, $this->form_fields['icon']['options']))
+				? apply_filters('woocommerce_prodamus_icon', sprintf('%sassets/img/%s.png', plugin_dir_url(__FILE__), $icon))
+				: '';
+
+			if ( empty( $this->payment_site_name ) || empty( $this->secret_key ) )
+				$this->enabled = 'no';
+
+			// Сохранение настроек модуля
+			add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+
+			// Страница оплаты
+			add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
+
+			// Страница благодарности
+			add_action('woocommerce_thankyou_' . $this->id, array($this, 'thankyou_page'));
+
+			// Прямой доступ к API через запрос "/index.php?wc-api=prodamus" или "/wc-api/prodamus/"
+			add_action('woocommerce_api_' . $this->id, array($this, 'api_handler'));
+
+			// Подключение стилей
+			add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
+		}
+
+		/**
+		 * Поля формы настройки шлюза оплаты
+		 */
+		function init_form_fields() {
+			$this->form_fields = array(
+				'enabled' => array(
+					'title' => __('Активность способа оплаты', 'woocommerce_gateway_prodamus'),
+					'type' => 'checkbox',
+					'label' => __('Активен', 'woocommerce_gateway_prodamus'),
+					'default' => 'yes'
+				),
+				'title' => array(
+					'title' => __('Название способа оплаты', 'woocommerce_gateway_prodamus'),
+					'type' => 'text',
+					'description' => __('Название способа оплаты, которое увидит пользователь при оформлении заказа', 'woocommerce_gateway_prodamus'),
+					'default' => __('Продамус.Платежи', 'woocommerce_gateway_prodamus'),
+					'placeholder' => __('Продамус.Платежи', 'woocommerce_gateway_prodamus'),
+				),
+				'description' => array(
+					'title' => __('Описание способа оплаты', 'woocommerce_gateway_prodamus'),
+					'type' => 'textarea',
+					'description' => __('Описание способа оплаты, которое клиент будет видеть на вашем сайте.', 'woocommerce_gateway_prodamus'),
+					'default' => __('Самый простой способ оплатить заказ. Принимаются карты: VISA, Mastercard, МИР, включая кредитные карты. Электронные деньги: Яндекс.Деньги, QIWI, Webmoney. Наличные в 5000 терминалах.', 'woocommerce_gateway_prodamus'),
+					'placeholder' => __('Описание способа оплаты, которое клиент будет видеть на вашем сайте.', 'woocommerce_gateway_prodamus'),
+				),
+				'payment_site_name' => array(
+					'title' => __('Адрес платежной страницы', 'woocommerce_gateway_prodamus'),
+					'type' => 'text',
+					'description' => __('Адрес Вашей платежной страницы в Продамус.Платежи', 'woocommerce_gateway_prodamus'),
+					'default' => '',
+					'placeholder' => 'https:/pay.domain.net/',
+				),
+				'secret_key' => array(
+					'title' => __('Секретный ключ', 'woocommerce_gateway_prodamus'),
+					'type' => 'text',
+					'description' => __('Ключ предоставляется службой поддержки Продамус', 'woocommerce_gateway_prodamus'),
+					'default' => ''
+				),
+				'order_status' => array(
+					'title' => __('Статус заказа', 'woocommerce_gateway_prodamus'),
+					'type'        => 'select',
+					'class'       => 'wc-enhanced-select',
+					'description' => __('Статус заказа, который будет установлен после успешной оплаты.', 'woocommerce_gateway_prodamus'),
+					'default'     => 'processing',
+					'options'     => array(
+						'processing' => __('В обработке', 'woocommerce_gateway_prodamus'),
+						'completed' => __('Выполнен', 'woocommerce_gateway_prodamus'),
+					)
+				),
+				'icon' => array(
+					'title' => __('Логотип способа оплаты', 'woocommerce_gateway_prodamus'),
+					'type'        => 'select',
+					'class'       => 'wc-enhanced-select',
+					'description' => __('Логотип способа оплаты, который увидит пользователь при оформлении заказа', 'woocommerce_gateway_prodamus'),
+					'default'     => 'all-payments',
+					'options'     => array(
+						'all-payments'	=> __('Все способы оплаты', 'woocommerce_gateway_prodamus'),
+						'only-cards'	=> __('Пластиковая карта Visa, MasterCard, МИР', 'woocommerce_gateway_prodamus'),
+						'no'	=> __('- скрыть логотип -', 'woocommerce_gateway_prodamus'),
+					)
+				),
+			);
+		}
+
+		/**
+		 * Admin Panel Options
+		 **/
+		public function admin_options() {
+			if ( empty( $this->payment_site_name ) || empty( $this->secret_key ) ) {
+				echo '<div class="error notice">';
+					echo '<p>';
+						_e( 'Не завершена настройка метода оплаты. Проверьте заполнены ли настройки "Адрес платежной страницы" и "Секретный ключ".', 'woocommerce_gateway_prodamus' );
+					echo '</p>';
+				echo '</div>';
+			}
+
+			parent::admin_options();
+		}
+
+		/**
+		 * Обработка запроса на оплату
+		 *
+		 * @param int $order_id
+		 * @return array
+		 */
+		function process_payment( $order_id ) {
+			if ( empty( $this->payment_site_name ) || empty( $this->secret_key ) ) {
+				wc_add_notice(
+					__('Не завершена настройка метода оплаты', 'woocommerce_gateway_prodamus'),
+					'error'
+				);
+				return;
+			}
+
+			$order = wc_get_order( $order_id );
+			$params = array();
+			$params['order_id'] = $order->get_order_number();
+			$params['products'] = array();
+			$params['customer_phone'] = $order->billing_phone;
+			if ( empty( $params['customer_phone'] ) )
+				$params['customer_email'] = $order->billing_email;
+			// $params['customer_extra'] = $order->customer_message;
+			$params['do'] = 'pay';
+			$params['sys'] = 'woocommerce';
+			$params['urlReturn'] = esc_url_raw( wc_get_checkout_url() );
+			$params['urlFail'] = esc_url_raw( $order->get_cancel_order_url_raw() );
+			$params['urlSuccess'] = esc_url_raw( $this->get_return_url($order) );
+			$params['urlNotification'] = get_site_url() . '/wc-api/prodamus/?order_id=' . $order->get_order_number();
+			$params['urlCancel'] = esc_url_raw( $order->get_cancel_order_url_raw() );
+
+			$calculated_total = 0;
+			foreach ( $order->get_items( array( 'line_item','fee' ) ) as $item ) {
+				if ( 'fee' === $item['type'] ) {
+					$item_line_total = sprintf( '%.2f', $item['line_total'] );
+					$calculated_total += $item_line_total;
+					$product = array(
+						'name' => $item['name'],
+						'price' => $item_line_total,
+						'quantity' => 1,
+					);
+				}
+				else {
+					$product = $order->get_product_from_item($item);
+					$item_line_total  = sprintf( '%.2f', $order->get_item_total( $item, false ) );
+					$calculated_total += $item_line_total * $item['qty'];
+					$product = array(
+						'name' => $item['name'],
+						'price' => $item_line_total,
+						'quantity' => $item['qty'],
+					);
+					$product['name'] = $item['name'];
+					$item_meta = new WC_Order_Item_Meta( $item );
+					if ( $meta = $item_meta->display( true, true ) )
+						$product['name'] .= ' ( ' . $meta . ' )';
+				}
+				$params['products'][] = $product;
+			}
+
+			if ( $order->get_shipping_methods() ) {
+				$item_line_total  = sprintf( '%.2f', method_exists( $order, 'get_shipping_total' ) ? $order->get_shipping_total() : $order->get_total_shipping() );
+				$params['products'][] = array(
+					'name' => sprintf( 'Доставка: %s', $order->get_shipping_method() ),
+					'price' => $item_line_total,
+					'quantity' => 1,
+				);
+				$calculated_total += $item_line_total;
+			}
+
+			if ( strtolower( get_bloginfo( 'charset' ) ) != strtolower( 'utf-8' ) ) {
+				array_walk_recursive(
+					$params,
+					function( &$v ){
+						$v = iconv( get_bloginfo( 'charset' ), 'utf-8//TRANSLIT',$v );
+					}
+				);
+			}
+
+			$params['signature'] = $this->_createHmac( $params );
+
+			return array(
+				'result' => 'success',
+				'redirect' => $this->payment_site_name
+					. ( strpos( $this->payment_site_name, '?' ) === false ? '?' : '&' )
+					. http_build_query( $params, '', '&' )
+			);
+		}
+
+		/**
+		 * Страница оплаты.
+		 *
+		 * @param int $order_id
+		 * @return array
+		 */
+		function receipt_page( $order_id ) {
+			wc_add_notice(
+				__('Вы попали на эту страницу по ошибке', 'woocommerce_gateway_prodamus'),
+				'error'
+			);
+			// echo '<pre>';
+			// printf('<h3>%s</h3>',__METHOD__);
+			// echo 'in file ',preg_replace(sprintf('~^%s~', preg_quote(ABSPATH)),'.../',__FILE__),PHP_EOL;
+			// echo 'on line ',__LINE__,PHP_EOL,PHP_EOL;
+			// print_r(func_get_args());
+			// echo '</pre>';
+			// exit;
+		}
+
+		/**
+		 * Страница благодарности.
+		 *
+		 * @param int $order_id
+		 * @return array
+		 */
+		function thankyou_page( $order_id ) {
+			global $woocommerce;
+			$order = wc_get_order($order_id);
+			$data = empty( $_POST ) ? $_GET : $_POST;
+			$payform_data = array();
+			array_walk( $data, function( &$v, $k ) use( &$payform_data ) {
+				if ( preg_match('~^_payform_(.*)$~', $k, $m))
+					$payform_data[$k] = $v;
+			});
+			$payform_data_sign = isset( $payform_data['_payform_sign'] ) ? $payform_data['_payform_sign'] : '';
+			unset( $payform_data['_payform_sign'] );
+
+			if ( !empty( $payform_data ) ) {
+				try {
+					if ( empty( $payform_data_sign ) )
+						throw new Exception( 'Платеж выполнен успешно' );
+					if ( empty( $this->payment_site_name ) || empty( $this->secret_key ) )
+						throw new Exception( 'Не завершена настройка метода оплаты' );
+					if ( !$this->_verifyHmac( $payform_data, $payform_data_sign ) )
+						throw new Exception( 'Ошибка подписи передаваемых данных' );
+					if ( isset( $payform_data['_payform_order_id'] ) && ( $payform_data['_payform_order_id'] != $order->get_order_number() ) )
+						throw new Exception( 'Ошибка передаваемых данных. Не совпадает ID заказа' );
+					if ( !isset( $payform_data['_payform_status'] ) )
+						throw new Exception( 'Ошибка передаваемых данных. Не указан результат оплаты.' );
+					if ( !in_array( $payform_data['_payform_status'], array('success') ) )
+						throw new Exception( 'Ошибка передаваемых данных. Неизвестный результат оплаты.' );
+						
+
+					// успешная оплата
+					if ( 'success' == $payform_data['_payform_status'] ) {
+						// Update order status
+						// $order->update_status( 'processing', __( 'Платеж выполнен успешно', 'woocommerce_gateway_prodamus' ) );
+						$order->update_status( $this->order_status, __( 'Платеж выполнен успешно', 'woocommerce_gateway_prodamus' ) );
+						// Add order note
+							// $order->add_order_note( __( 'Платеж выполнен успешно', 'woocommerce_gateway_prodamus' ) );
+						// Payment complete
+						$order->payment_complete();
+						// Reduce stock levels
+						$order->reduce_order_stock();
+						// Remove cart
+						$woocommerce->cart->empty_cart();
+
+						// echo '<h1>Платеж успешно совершен</h1>';
+						// echo '<div class="woocommerce-message">Благодарим вас за покупку!</div>';
+						echo '<h1>Благодарим вас за покупку!</h1>';
+						echo '<div class="woocommerce-message">Платеж успешно совершен.</div>';
+						// echo '<div class="woocommerce-info">Благодарим вас за покупку!</div>';
+						// echo '<div class="woocommerce-error">Благодарим вас за покупку!</div>';
+					}
+				}
+				catch ( Exception $e ) {
+					wc_add_notice( __( $e->getMessage(), 'woocommerce_gateway_prodamus' ), 'error' );
+				}
+			}
+		}
+
+		/**
+		 * Прямой доступ к API через запрос "/index.php?wc-api=prodamus" или "/wc-api/prodamus/"
+		 */
+		function api_handler() {
+			global $woocommerce;
+			
+			$headers = getallheaders();
+			$payform_data = $_POST;
+			
+			$payform_data_sign = isset($headers['Sign']) ? $headers['Sign'] : '';
+
+			if (
+				!empty($payform_data['payment_status'])
+				&& $payform_data['payment_status'] == 'success'
+			) {
+				try {
+					if ( empty($payform_data_sign) ) {
+						throw new Exception('Отсутствует подпись запроса');
+					}
+						
+					if ( empty($this->payment_site_name) || empty($this->secret_key) ) {
+						throw new Exception('Не завершена настройка метода оплаты');
+					}
+						
+					if ( !$this->_verifyHmac($payform_data, $payform_data_sign) ) {
+						throw new Exception('Ошибка подписи передаваемых данных');
+					}
+						
+					if ( empty($payform_data['order_num']) || empty($_GET['order_id']) ) {
+						throw new Exception('Отсутствует номер заказа');
+					}
+					
+					if ($payform_data['order_num'] <> $_GET['order_id']) {
+						throw new Exception('Ошибка передаваемых данных. Не совпадает ID заказа');
+					}
+						
+					$order_id = $payform_data['order_num'];
+					$order = wc_get_order($order_id);
+					
+					if (!$order) {
+						throw new Exception('Заказ не найден');
+					}
+
+					// Update order status
+					// $order->update_status( 'processing', __( 'Платеж выполнен успешно', 'woocommerce_gateway_prodamus' ) );
+					$order->update_status( $this->order_status, __( 'Платеж выполнен успешно', 'woocommerce_gateway_prodamus' ) );
+					// Add order note
+						// $order->add_order_note( __( 'Платеж выполнен успешно', 'woocommerce_gateway_prodamus' ) );
+					// Payment complete
+					$order->payment_complete();
+					// Reduce stock levels
+					$order->reduce_order_stock();
+					// Remove cart
+					$woocommerce->cart->empty_cart();
+
+					header("HTTP/1.0 200 OK", true, 200);
+					die('success');
+				}
+				catch ( Exception $e ) {
+					header("HTTP/1.0 400 Bad Request", true, 400);
+					die($e->getMessage());
+				}
+			}
+		
+			die(__('Вы попали на эту страницу по ошибке', 'woocommerce_gateway_prodamus'));
+		}
+
+		/**
+		 * Прямой доступ к API через запрос "/index.php?wc-api=prodamus" или "/wc-api/prodamus/"
+		 */
+		function enqueue_scripts() {
+			wp_register_style( 'woocommerce-gateway-prodamus', plugin_dir_url(__FILE__) . 'assets/css/style.css' );
+			wp_enqueue_style( 'woocommerce-gateway-prodamus' );
+		}
+
+		private function _createHmac($data) {
+			$data = (array) $data;
+			array_walk_recursive($data, function(&$v){
+				$v = strval($v);
+			});
+			$this->_sort($data);
+			if (version_compare(PHP_VERSION, '5.4.0', '<')) {
+				$data = preg_replace_callback('/((\\\u[01-9a-fA-F]{4})+)/', function ($matches) {
+				   return json_decode('"'.$matches[1].'"');
+				}, json_encode($data));
+			}
+			else {
+				$data = json_encode($data, JSON_UNESCAPED_UNICODE);
+			}
+			return hash_hmac('sha256', $data, $this->secret_key);
+		}
+
+		private function _verifyHmac($data, $sign) {
+			$_sign = $this->_createHmac($data);
+			return ($_sign && (strtolower($_sign) == strtolower($sign)));
+		}
+
+		private function _sort(&$data) {
+			ksort($data, SORT_REGULAR);
+			foreach ($data as &$arr)
+				is_array($arr) && $this->_sort($arr);
+		}
+	}
+
+	/**
+	 * Добавление шлюза оплаты
+	 **/
+	function woocommerce_gateway_prodamus_add( $methods ) {
+		$methods[] = 'WC_Gateway_Prodamus';
+		return $methods;
+	}
+	add_filter('woocommerce_payment_gateways', 'woocommerce_gateway_prodamus_add');
+}
+add_action( 'plugins_loaded', 'woocommerce_gateway_prodamus_init' );
